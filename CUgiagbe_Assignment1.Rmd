@@ -1,0 +1,91 @@
+---
+title: "DATA605_HW1_Image Transformation"
+author: "Charles Ugiagbe"
+date: "2/5/2022"
+output: html_document
+---
+
+
+```{r message=FALSE, warning=FALSE}
+library(animation)
+```
+
+##   Letter Creation
+
+```{r}
+x <- c(rep(-1.5, 500), seq(-1,-1.5, length.out = 500), rep(-1.5, 500),seq(-1.5,-1.5, length.out = 500), seq(-1.5,-0.5, length.out = 500), seq(-1.5, -0.5, length.out = 500), rep(0, 1000), rep(1,1000), seq(0,1, length.out = 500))
+y <- c(seq(1,0, length.out = 500), rep(1, 500), seq(0,-1, length.out = 500), rep(0,500), rep(1, 500), rep(-1, 500), seq(-1,1,length.out = 1000), seq(-1,1,length.out = 1000), rep(-1, 500))
+z <- rbind(x,y)
+z <- data.frame(z)
+
+plot(y~x, xlim = c(-3,3), ylim = c(-3,3))
+```
+
+
+##   Shear Transformation
+
+```{r,animation.hook='gifski', interval = 0.05}
+a <- diag(2)
+x11()
+
+for (i in seq(-3,3,length.out=100)){
+  a[2,1]=i #third element of a becomes i
+  shear_y <- (apply(z,2,function(x) a%*%x))
+  plot(shear_y[2,] ~ shear_y[1,], xlim=c(-3,3), ylim=c(-3,3))
+}
+```
+
+```{r,animation.hook='gifski', interval = 0.05}
+a <- diag(2) 
+#resetting a 
+for (i in seq(-3,3,length.out=100)){
+  
+  a[1,2]=i #third element of a becomes i
+  shear_x <- apply(z,2,function(x) a%*%x)
+  plot(shear_x[2,] ~ shear_x[1,], xlim=c(-3,3), ylim=c(-3,3))
+}
+```
+
+##   Scale Transformation
+
+```{r,animation.hook='gifski', interval = 0.05}
+x11()
+a <- diag(2)
+#resetting a to identity
+for (i in seq(-3,3,length.out=100)){
+  
+  a[1,1]=i #first element of a becomes i
+  a[2,2]=i #fourth element of a becomes i
+  scale <- apply(z,2,function(x) a%*%x)
+  plot(scale[2,]~scale[1,], xlim=c(-3,3), ylim=c(-3,3))
+}
+```
+
+
+##   Rotation Transformation
+
+```{r,animation.hook='gifski', interval = 0.05}
+x11()
+#a will be changed to sine and cosine
+for (i in seq(-3,3,length.out=100)){
+  a <- matrix(c(cos(i), -sin(i), sin(i), cos(i)), nrow = 2, ncol = 2 )
+  rotation <- apply(z,2,function(x) a%*%x)
+  plot(rotation[2,]~rotation[1,], xlim=c(-3,3), ylim=c(-3,3))
+}
+```
+
+
+##   Projection Transformation
+
+```{r,animation.hook='gifski', interval = 0.05}
+x11()
+a <- diag(2) 
+#reset a once more
+for (i in seq(-3,3,length.out=100)){
+  
+  a[2,2]=i #fourth element of a becomes i
+  project=apply(z,2,function(x) a%*%x)
+  plot(project[2,]~project[1,], xlim=c(-3,3), ylim=c(-3,3))
+}
+```
+
