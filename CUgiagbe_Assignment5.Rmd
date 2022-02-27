@@ -1,0 +1,272 @@
+---
+title: "DATA605_HW5_Probability Distributions"
+author: "Charles Ugiagbe"
+date: "2/26/2022"
+output:
+  rmdformats::readthedown:
+    self_contained: yes
+    thumbnails: yes
+    lightbox: yes
+    gallery: no
+    highlight: tango
+editor_options: 
+  chunk_output_type: inline
+---
+
+
+(Bayesian). A new test for multinucleoside-resistant (MNR) human immunodeficiency virus type 1 (HIV-1) variants was recently developed. The test maintains 96% sensitivity, meaning that, for those with the disease, it will correctly report “positive” for 96% of them. The test is also 98% specific, meaning that, for those without the disease, 98% will be correctly reported as “negative.” MNR HIV-1 is considered to be rare (albeit emerging), with about a .1% or .001 prevalence rate. Given the prevalence rate, sensitivity, and specificity estimates, what is the probability that an individual who is reported as positive by the new test actually has the disease? If the median cost (consider this the best point estimate) is about $100,000 per positive case total and the test itself costs $1000 per administration, what is the total first-year cost for treating 100,000 individuals?
+
+##    Solution 1 (Bayesian)
+
+**Let B = Positive test, A1 = Actual HIV pt, A2 = Actual non-HIV**
+
+P(A1) = 0.001
+
+P(A2) = 0.999
+
+P(B|A1) = 0.96
+
+P(B|A2) = 1 - 0.98 = 0.02
+
+Using Bayes formula
+
+P(A1 | B) =  P(B|A1)P(A1) / P(B|A1)P(A1) + P(B|A2)P(A2)
+
+
+```{r}
+(.96*.001)/((.96*.001)+(.02*.999))
+```
+
+**Total first-year cost for treating 100,000 individuals**
+
+```{r}
+#$100,000 per positive case total and the test itself costs $1000 per administration
+options(scipen = 999)
+
+Pt<-100000*.001
+Cost_test<-1000*100000
+Cost_Pt<-Pt*100000
+TotalCost<-Cost_test+Cost_Pt
+TotalCost
+```
+
+
+2.(Binomial). The probability of your organization receiving a Joint Commission inspection in any given month is .05. What is the probability that, after 24 months, you received exactly 2 inspections? What is the probability that, after 24 months, you received 2 or more inspections? What is the probability that your received fewer than 2 inspections? What is the expected number of inspections you should have received? What is the standard deviation?
+
+
+##    Solution 2 (Binomial)
+
+```{r}
+#prob(Exactly two)
+dbinom(2,24,.05)
+```
+
+```{r}
+#p(two or more)= 1 - (P(1) + P(0))
+1-(dbinom(1,24,.05) + dbinom(0,24,.05))
+```
+
+```{r}
+# P(fewer than 2) = P(0) + P(1)
+dbinom(1,24,.05) + dbinom(0,24,.05)
+```
+
+```{r}
+pbinom(1, 24, 0.05, lower.tail = T)
+```
+
+**Expected No of Inspection = Expectation = np**
+```{r}
+# E[X] = np
+ 24 * 0.05
+```
+
+$S.D = \sqrt{Variance}$
+
+$S.D = \sqrt{npq}$
+
+```{r}
+#SD = (npq)^.5
+S.D = (24 * 0.05 * 0.95)^0.5
+S.D
+```
+
+
+3.(Poisson). You are modeling the family practice clinic and notice that patients arrive at a rate of 10 per hour. What is the probability that exactly 3 arrive in one hour? What is the probability that more than 10 arrive in one hour? How many would you expect to arrive in 8 hours? What is the standard deviation of the appropriate probability distribution? If there are three family practice providers that can see 24 templated patients each day, what is the percent utilization and what are your recommendations?
+
+
+##   solution 3 (poisson)
+
+$f(x) = \frac{e^{-\lambda}\lambda ^{x}}{x!}$
+
+**Probability of Exactly 3 arriving**
+```{r}
+dpois(x=3, lambda = 10)
+```
+
+**Probability of more than 10 arriving**
+```{r}
+ppois(q=10, 10, lower.tail = FALSE)
+```
+
+**Expectation when t = 8**
+
+$E(x) = \lambda p$
+
+E(X) = 10 * 8 = 80
+
+
+**What is the Standard Deviation?**
+
+$S.D = \sqrt{Variance} = \sqrt{npq}$
+```{r}
+# S.D = var^.5
+ 
+ 10^.5
+```
+
+
+4.(Hypergeometric). Your subordinate with 30 supervisors was recently accused of favoring nurses. 15 of the subordinate’s workers are nurses and 15 are other than nurses. As evidence of malfeasance, the accuser stated that there were 6 company-paid trips to Disney World for which everyone was eligible. The supervisor sent 5 nurses and 1 non-nurse. If your subordinate acted innocently, what was the probability he/she would have selected five nurses for the trips? How many nurses would we have expected your subordinate to send? How many non-nurses would we have expected your subordinate to send?
+
+
+##   Solution 4 ( Hypergeometric)
+
+**Probability the subordinate would have selected five nurses**
+```{r}
+#P(5), x=5,m=15,n=15,k=6
+dhyper(5,15,15,6,log=FALSE)
+```
+**Expected number of nurses of the trip**
+```{r}
+# E(X) = KM/N 
+
+6*15/30
+```
+
+**Expected number of non-nurses for the trip**
+
+```{r}
+# k - E(X)
+6 - 3
+```
+
+5.(Geometric). The probability of being seriously injured in a car crash in an unspecified location is about .1% per hour. A driver is required to traverse this area for 1200 hours in the course of a year. What is the probability that the driver will be seriously injured during the course of the year? In the course of 15 months? What is the expected number of hours that a driver will drive before being seriously injured? Given that a driver has driven 1200 hours, what is the probability that he or she will be injured in the next 100 hours?
+
+##   Solution 5 (Geometric)
+
+**Probability of at least 1 seriously injury**
+```{r}
+#prob =  P(1) + P(2) + P(3)....
+#1 - P(0)
+1-pgeom(1200,.001)
+```
+
+**Probability of serious injury in 15 months**
+```{r}
+# 15 months equates to 1200 + 300 = 1500 hours
+1-pgeom(1500,0.001)
+```
+
+**Expected number of hours to get injured**
+```{r}
+# E[X] = 1/p
+1/0.001
+```
+
+**Probability will be injured in next 100 hours after initial 1200 hours without injury**
+```{r}
+#so P(injured next 100 hours|not injured 1200)
+((pgeom(1300,.001)-pgeom(1200,.001))*(1-pgeom(1200,.001)))/(1-pgeom(1200,.001))
+```
+
+6.You are working in a hospital that is running off of a primary generator which fails about once in 1000 hours. What is the probability that the generator will fail more than twice in 1000 hours? What is the expected value?
+
+
+##    Solution 6 
+
+**Probability the generator will fail more than twice in 1000 hours**
+```{r}
+# using Poison distribution.
+# 1 - (P(0) + p(1) + p(2))
+# 1-CDFP(P(2))
+
+1 - ppois(2,1)
+```
+
+**Expected value**
+
+```{r}
+#E(x) = lambda * p
+ 1 * 1 
+```
+
+7.A surgical patient arrives for surgery precisely at a given time. Based on previous analysis (or a lack of knowledge assumption), you know that the waiting time is uniformly distributed from 0 to 30 minutes. What is the probability that this patient will wait more than 10 minutes? If the patient has already waited 10 minutes, what is the probability that he/she will wait at least another 5 minutes prior to being seen? What is the expected waiting time?
+
+##    Solution 7
+
+**Probability patient will wait more than 10 minutes**
+```{r}
+#P(x>10), 1- p(10)
+1-punif(10,0,30)
+```
+
+```{r}
+# conditional P(A|B)/P(B)
+#P(A&B)/PA=PA/PB
+#P(A) = 1-cdf P(15)
+#P(B) = CDF P(10)
+PA <- 1-punif(15,10,30)
+PB <- 1-punif(10,10,30)
+PA/PB
+```
+
+**Expected waiting time**
+```{r}
+# E[X]=1/2(a+b)
+0.5*(0+30)
+```
+
+8.Your hospital owns an old MRI, which has a manufacturer’s lifetime of about 10 years (expected value). Based on previous studies, we know that the failure of most MRIs obeys an exponential distribution. What is the expected failure time? What is the standard deviation? What is the probability that your MRI will fail after 8 years? Now assume that you have owned the machine for 8 years. Given that you already owned the machine 8 years, what is the probability that it will fail in the next two years?
+
+##    Solution 8 (Exponential)
+
+$f(x) = \lambda e^{\lambda x}$
+
+\lambda = Distribution parameter
+
+**Expected failure time**
+
+$E(X) = 1/\lambda$
+
+$E(X) = 1/10$
+
+E(X) = 0.1
+
+
+
+**What is the Standard Deviation?**
+
+$Var(X) = 1/\lambda^2$
+
+$S.D = \sqrt{Var X}$
+
+$S.D = \sqrt{1/\lambda^2}$
+
+$S.D = \sqrt{1/10^2} = \sqrt{10^{-2}} = (10^{-2})^1/2$
+
+$S.D = 10^{-1} = 0.1$
+
+
+**Probability MRI will fail after 8 years**
+
+```{r}
+1-pexp(8,.1)
+```
+
+**Prob(will fail in 2 years | not fail in 8 years)**
+```{r}
+((pexp(10,.1)-pexp(8,.1))*(1-pexp(8,.1)))/(1-pexp(8,.1)) 
+```
+
+
+
