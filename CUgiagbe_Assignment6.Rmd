@@ -1,0 +1,163 @@
+---
+title: "DATA605_HW6_COMBINATORICS"
+author: "Charles Ugiagbe"
+date: "3/5/2022"
+output:
+  rmdformats::readthedown:
+    self_contained: yes
+    thumbnails: yes
+    lightbox: yes
+    gallery: no
+    highlight: tango
+editor_options: 
+  chunk_output_type: inline
+---
+
+##    Question 1
+A bag contains 5 green and 7 red jellybeans. How many ways can 5 jellybeans be withdrawn from the bag so that the number of green ones withdrawn will be less than 2?
+
+###    Solution 1
+
+```{r}
+# Combinations: (0 green + 5 green) + (1 green + 4 green)
+choose(5,0)*choose(7,5) + choose(5,1)*choose(7,4)
+```
+
+
+##    Question 2
+A certain congressional committee consists of 14 senators and 13 representatives. How many ways can a subcommittee of 5 be formed if at least 4 of the members must be representatives
+
+###    Solution 2:
+
+```{r}
+# Combinations: (4 reps + 1 sens) + (5 reps + 0 sens)
+choose(13,4)*choose(14,1) + choose(13,5)*choose(14,0)
+```
+
+##    Question 3
+If a coin is tossed 5 times, and then a standard six-sided die is rolled 2 times, and finally a group of three cards are drawn from a standard deck of 52 cards without replacement, how many different outcomes are possible?
+
+###   Solution 3:
+
+```{r}
+# Combinations: (coin outcomes) * (die outcomes) + (card outcomes)
+(2 ** 5) * (6 ** 2) * choose(52,3)
+```
+
+##    Question 4
+3 cards are drawn from a standard deck without replacement. What is the probability that at least one of the cards drawn is a 3? Express your answer as a fraction or a decimal number rounded to four decimal places
+
+###    Solution 4:
+
+Total cards in the deck = 52, Number of 3's in standard deck = 4
+
+P(x>=1) = 1 - P(x<1) = 1 - P(x=0)
+ 
+1 - [(3C0 * 49C3) / (52C3)]
+
+```{r}
+p_atleast_one <- 1 - ((choose(4,0) * choose(48,3)) / choose(52,3))
+round(p_atleast_one, digits=4)
+```
+
+##    Question 5
+
+Lorenzo is picking out some movies to rent, and he is primarily interested in documentaries and mysteries. He has narrowed down his selections to 17 documentaries and 14 mysteries.
+
+**How many different combinations of 5 movies can he rent?**
+```{r}
+choose(31,5)
+```
+**How many different combinations of 5 movies can he rent if he wants at least one mystery?**
+
+
+```{r}
+# Combinations: (1myst + 4docs)+(2myst + 3docs)+(4myst + 1docs)+(5myst + 0docs)
+combs <- choose(14,1)* choose(17,4) + choose(14,2)* choose(17,3) + choose(14,3)* choose(17,2) + choose(14,5)* choose(17,0)
+combs
+```
+
+##   Question 6
+In choosing what music to play at a charity fund raising event, Cory needs to have an equal number of symphonies from Brahms, Haydn, and Mendelssohn. If he is setting up a schedule of the 9 symphonies to be played, and he has 4 Brahms, 104 Haydn, and 17 Mendelssohn symphonies from which to choose, how many different schedules are possible? Express your answer in scientific notation rounding to the hundredths place.
+
+###    Solution 6:
+```{r}
+schedules <- (choose(4,3) * choose(104,3)) * choose(17,3) * factorial(9)
+signif(schedules, digits=2)
+```
+
+```{r}
+schedules
+```
+
+###   Question 7
+An English teacher needs to pick 13 books to put on his reading list for the next school year, and he needs to plan the order in which they should be read. He has narrowed down his choices to 6 novels, 6 plays, 7 poetry books, and 5 nonfiction books.
+
+Step 1.
+If he wants to include no more than 4 nonfiction books, how many different reading schedules are possible? Express your answer in scientific notation rounding to the hundredths place.
+
+**Solution**
+```{r}
+# Combinations: 0nonfiction + 1nonfiction + 2nonfiction + 3nonfiction + 4nonfiction
+nonfiction_0 <- choose(19,13)
+nonfiction_1 <- choose(19,12) * choose(5,1)
+nonfiction_2 <- choose(19,11) * choose(5,2)
+nonfiction_3 <- choose(19,10) * choose(5,3)
+nonfiction_4 <- choose(19,9) * choose(5,4)
+nonfiction_5 <- choose(19,8) * choose(5,5)
+
+selections <- ((nonfiction_0) + nonfiction_1 + nonfiction_2 + nonfiction_3 + nonfiction_4 + nonfiction_5) * factorial(13)
+formatC(selections, format = "e", digits = 2)
+```
+
+Step 2.
+If he wants to include all 6 plays, how many different reading schedules are possible? Express your answer in scientific notation rounding to the hundredths place.
+
+```{r}
+# Combinations: 6C6 * 18C7 * 13!
+schdls = choose(6,6) * choose(18,7) * factorial(13)
+formatC(schdls,format = "e", digits = 2)
+```
+
+##   Question 8
+
+Zane is planting trees along his driveway, and he has 5 sycamores and 5 cypress trees to plant in one row. What is the probability that he randomly plants the trees so that all 5 sycamores are next to each other and all 5 cypress trees are next to each other?
+Express your answer as a fraction or a decimal number rounded to four decimal places.
+
+
+###   Solution 8
+```{r}
+total_trees <- 5 + 5
+total_arrangmnts <- choose(total_trees, 5)
+ways_of_arrangmnts <- 2
+probability <- ways_of_arrangmnts / total_arrangmnts
+round(probability, digits = 4)
+```
+
+##    Question 9
+
+If you draw a queen or lower from a standard deck of cards, I will pay you $4. If not, you pay me $16. (Aces are considered the highest card in the deck.)
+**Step 1.**
+Find the expected value of the proposition. Round your answer to two decimal places. Losses must be expressed as negative values.
+
+**Solution**
+
+Order of card: A, K, Q, J, 10, 9, 8, 7, 6, 5, 4, 3, 2
+
+numbers of queen or lower = 11 * 4 = 44
+```{r}
+queen_or_lower_cards <- 44
+proposition <- ((44 / 52) * 4) + ((8 / 52) * -16)
+round(proposition, digits = 2)
+```
+
+**Step 2.**
+If you played this game 833 times how much would you expect to win or lose? Round your answer to two decimal places. Losses must be expressed as negative values.
+
+**Solution**
+```{r}
+plays <- 833
+winorloss <- plays * proposition
+round(winorloss, digits = 2)
+```
+
