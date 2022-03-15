@@ -1,0 +1,140 @@
+---
+title: "DATA605_HW7_DISTRIBUTIONS AND DENSITIES"
+author: "Charles Ugiagbe"
+date: "3/15/2022"
+output:
+  rmdformats::readthedown:
+    self_contained: yes
+    thumbnails: yes
+    lightbox: yes
+    gallery: no
+    highlight: tango
+editor_options: 
+  chunk_output_type: inline
+---
+
+###   Question 1
+Let X1, X2, . . . , Xn be n mutually independent random variables, each of which is uniformly distributed on the integers from 1 to k. Let Y denote the minimum of the Xi’s. Find the distribution of Y.
+
+##  Solution 1
+
+Assuming that each $X_{i}$ has k possibilities, we will have $k^{n}$ possible values in total
+
+1 is the minimum of the Xi’s, the nymber of ways of getting Y.
+
+$P(x = 1) = \frac{k^{n} - (k-1)^{n}}{k^{n}}$
+
+$P(x = 2) = \frac{(k-2+1)^{n} - (k-2)^{n}}{k^{n}}$
+
+For $X_{1}, X_{2}, . . . , X_{n}$ mutually independent random variables, If Y = j  then, the minimum value j is given as:
+
+$P(x = j) = \frac{(k-j+1)^{n} - (k-j)^{n}}{k^{n}}$
+
+
+###   Question 2
+Your organization owns a copier (future lawyers, etc.) or MRI (future doctors). This machine has a manufacturer’s expected lifetime of 10 years. This means that we expect one failure every ten years. (Include the probability statements and R Code for each part.).
+
+2a.What is the probability that the machine will fail after 8 years?. Provide also the expected value and standard deviation. Model as a geometric. (Hint: the probability is equivalent to not failing during the first 8 years..)
+
+##   Solution 2A (Geometric)
+
+Geometric distribution is given as:
+
+$P_{r}(X=k) = (1−p)^{k-1}p$
+
+```{r}
+p <- 1 / 10
+geometric_prob <- ((1 - p)^ (8 - 1) * p)
+round(geometric_prob, 4)
+```
+**Expected value**
+```{r}
+EV_geometric <- 1 / p
+EV_geometric
+```
+**Standard Deviation**
+```{r}
+sd_geometric <- sqrt((1 - p) / (p ^ 2))
+round(sd_geometric, 4)
+```
+
+2b. What is the probability that the machine will fail after 8 years?. Provide also the expected value and standard deviation. Model as an exponential.
+
+##   Solution 2B (Exponential)
+
+The exponential distribution is given as:
+
+$f(x) = \lambda e^{\lambda x}$
+
+```{r}
+lambda <- 1 / 10
+e <- exp(1)
+exponential_prob <- lambda*e ^ (- lambda * 8)
+round(exponential_prob, 4)
+```
+
+**Expected value**
+```{r}
+EV_exponential <- 1 / lambda
+EV_exponential
+```
+
+**Standard Deviation**
+```{r}
+sd_exponential <- sqrt(1 / (lambda ^ 2))
+sd_exponential
+```
+
+
+2c. What is the probability that the machine will fail after 8 years?. Provide also the expected value and standard deviation. Model as a binomial. (Hint: 0 success in 8 years)
+
+##   Solution 2C (Binomial)
+
+The Binomial distribution is given as:
+
+$f(r,n,p)=\binom{n}{r}p^{r}(1−p)^{n-r}$
+
+```{r}
+p <- 1 / 10
+binomial_prob <- choose(8, 0) * (p ^ 0) * ((1 - p) ^ (8))
+round(binomial_prob, 4)
+```
+
+```{r}
+expected_value_binomial <- p * 8
+expected_value_binomial
+```
+
+
+```{r}
+n = 8
+sd_binomial <- sqrt(n * p  * (1 - p))
+round(sd_binomial, 4)
+```
+
+
+2d. What is the probability that the machine will fail after 8 years?. Provide also the expected value and standard deviation. Model as a Poisson.
+
+##   Solution 2D (Poisson)
+
+Poisson Distribution is given as:
+
+$P(x,\lambda)= \frac{e^{-\lambda}\lambda^{x}}{x!}$
+
+```{r}
+lambda_poisson = 8 * (1 / 10)
+e <- exp(1)
+poisson_prob <-(e ^ (- lambda_poisson) * lambda_poisson ^ 0) / factorial(0)
+round(poisson_prob, 4)
+```
+**Expected value**
+```{r}
+EV_poisson <- lambda_poisson
+EV_poisson
+```
+**Standard Deviation**
+```{r}
+sd_poisson <- sqrt(lambda_poisson)
+round(sd_poisson, 4) 
+```
+
