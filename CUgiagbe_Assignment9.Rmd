@@ -1,0 +1,191 @@
+---
+title: "DATA605_HW9_Central Limit Theorem & Generating Functions"
+author: "Charles Ugiagbe"
+date: "3/27/2022"
+output:
+  rmdformats::readthedown:
+    self_contained: yes
+    thumbnails: yes
+    lightbox: yes
+    gallery: no
+    highlight: tango
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Page 363 Exercise 11
+
+The price of one share of stock in the Pilsdorff Beer Company is given by $Y_n$ on the $n$th day of the year. Finn observes that
+the differences $X_n = Y_{n+1} - Y_n$ appear to be independent random variables
+with a common distribution having mean $\mu = 0$ and variance $\sigma^2 = 1/4$. If
+$Y_1 = 100$, estimate the probability that $Y_{365}$ is
+
+a. $\ge 100$
+b. $\ge 110$
+c. $\ge 120$
+
+### SOLUTION
+
+Since $X_n$ is an independent random variable, then its sum $S_n$ is normally distributed. 
+
+$$
+\begin{split}
+S_n &= X_1+X_2+X_3...+X_n \\
+&=(Y_2-Y_1)+(Y_3-Y_2)+(Y_4-Y_3)+...+(Y_{n+1}-Y_n)\\
+&=Y_2-Y_1+Y_3-Y_2+Y_4-Y_3+...+Y_{n+1}-Y_n\\
+&=Y_{n+1}-Y_1\\
+&=Y_{n+1}-100
+\end{split}
+$$
+
+Mean of $S_n$: $\mu_{S_n} = \mu_{X_1}+\mu_{X_2}+\mu_{X_3}+...+\mu_{X_n} = n\mu_X = 0$
+
+Variance of $S_n$: $\sigma^2_{S_n} = \sigma^2_{X_1}+\sigma^2_{X_2}+\sigma^2_{X_3}+...+\sigma^2_{X_n} = n\sigma^2_X = n \times 1/4 = n/4$
+
+Standard deviation of $S_n$: $\sigma_{S_n} = \sqrt{n}/2$
+
+Consider $n=364$, then $S_{364} = Y_{365} -100$ and $Y_{365} = S_{364}+100$.
+
+$\sigma^2_{S_{364}} = 364/4 = 91$ and $\sigma_{S_{364}} = \sqrt{91}$
+
+### Solution (a)
+
+$$
+\begin{split}
+P(Y_{365} \ge 100) &= P(S_{364}+100 \ge 100) \\
+&= P(S_{364} \ge 0)
+\end{split}
+$$
+
+Since $S_n$ is normally distributed with mean $0$ and normal distribution is symmetric, exactly half of values will be greater than mean. 
+
+**ANSWER:** $P(S_{364}\ge 0) =0.5$
+
+### Solution (b)
+
+$$
+\begin{split}
+P(Y_{365} \ge 110) &= P(S_{364}+100 \ge 110) \\
+&= P(S_{364} \ge 10) \\
+&= P(S^*_{364}\ge 10/\sqrt{91})
+\end{split}
+$$  
+
+```{r}
+z <- 10/sqrt(91)
+pnorm(z, lower.tail=FALSE)
+```
+
+**ANSWER:** $P(Y{365} \ge 110) \approx 0.14725$
+
+### Solution (c)
+
+$$
+\begin{split}
+P(Y_{365} \ge 120) &= P(S_{364}+100 \ge 120) \\
+&= P(S_{364} \ge 20) \\
+&= P(S^*_{364}\ge 20/\sqrt{91})
+\end{split}
+$$
+
+
+```{r}
+z <- 20/sqrt(91)
+pnorm(z, lower.tail=FALSE)
+```
+
+**ANSWER:** $P(Y{365} \ge 120) \approx 0.01802$
+
+
+## Problem 2
+
+Calculate the expected value and variance of the binomial distribution using the moment generating function.
+
+### SOLUTION
+
+For binomial distribution, $P(X=k) = {n \choose k} p^k q^{n-k}$
+
+where $q=1-p$.
+
+The moment generating function is $M_X(t)=(q+pe^t)^n$.
+
+The first moment is $M'_X(t) = n(q+pe^t)^{n-1}pe^t$.
+
+The expected value is the first moment evaluated at $t=0$:
+
+$$
+\begin{split}
+E(X)=M'_X(0) &= n(q+pe^0)^{n-1}pe^0\\
+&= n(q+p)^{n-1}p\\
+&= np(1-p+p)^{n-1}\\
+&= np1^{n-1}\\
+&=np
+\end{split}
+$$
+
+The second moment is $M''_X(t) = n(n-1)(q+pe^t)^{n-2}p^2 e^{2t}+n(q+pe^t)^{n-1}pe^t$.
+
+Evaluate the second moment at $t=0$:
+
+$$
+\begin{split}
+E(X^2)=M''_X(0) &= n(n-1)(q+pe^0)^{n-2}p^2 e^0+n(q+pe^0)^{n-1}pe^0\\
+&= n(n-1)(1-p+p)^{n-2}p^2+n(1-p+p)^{n-1}p\\
+&= n(n-1)p^2+np
+\end{split}
+$$
+
+The variance is $V(X)=E(X^2)-E(X)^2$:
+
+$$
+\begin{split}
+V(X) &= n(n-1)p^2+np-n^2p^2 \\
+&= np((n-1)p+1-np) \\
+&= np(np-p+1-np) \\
+&= np(1-p) \\
+&= npq
+\end{split}
+$$
+
+We arrived at the known definitions for binomial distribution - $E(X)=np$ and $V(X)=npq$.
+
+
+## Problem 3
+
+Calculate the expected value and variance of the exponential distribution using the moment generating function.
+
+### SOLUTION
+
+For exponential distribution, $f(x)=\lambda e^{-\lambda x}$.
+
+The moment generating function is $M_X(t)=\frac{\lambda}{\lambda-t}, t<\lambda$.
+
+Using WolframAlpha, we get $M'_X(t) = \frac{\lambda}{(\lambda-t)^2}$ and $M''_X(t) = \frac{2\lambda}{(\lambda-t)^3}$.
+
+Expected value:
+
+$$
+\begin{split}
+E(X)=M'_X(0) &= \frac{\lambda}{(\lambda-0)^2} \\
+&= \frac{\lambda}{\lambda^2}\\
+&= \frac{1}{\lambda}
+\end{split}
+$$
+
+Variance:
+
+$$
+\begin{split}
+V(X) = E(X^2)-E(X)^2 &= M''_X(0)-M'_X(0)^2 \\
+&=\frac{2\lambda}{(\lambda-0)^3} - \frac{1}{\lambda^2}\\
+&=\frac{2\lambda}{\lambda^3} - \frac{1}{\lambda^2}\\
+&=\frac{2}{\lambda^2} - \frac{1}{\lambda^2}\\
+&=\frac{1}{\lambda^2}
+\end{split}
+$$
+
+We arrived at the known definitions for binomial distribution - $E(X)=1/\lambda$ and $V(X)=1/\lambda^2$.
