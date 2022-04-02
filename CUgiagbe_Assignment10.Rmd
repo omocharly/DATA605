@@ -1,0 +1,71 @@
+---
+title: "DATA605_HW10_Markov Chains & Simple Ramdom Walk"
+author: "Charles Ugiagbe"
+date: "4/2/2022"
+output:
+  rmdformats::readthedown:
+    self_contained: yes
+    thumbnails: yes
+    lightbox: yes
+    gallery: no
+    highlight: tango
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Problem Set
+
+Smith is in jail and has 1 dollar; he can get out on bail if he has 8 dollars. A guard agrees to make a series of bets with him. If Smith bets A dollars, he wins A dollars with probability .4 and loses A dollars with probability .6. Find the probability that he wins 8 dollars before losing all of his money if
+
+(a)he bets 1 dollar each time (timid strategy).
+
+(b)he bets, each time, as much as possible but not more than necessary to bring his fortune up to 8  dollars (bold strategy).
+
+(c)Which strategy gives Smith the better chance of getting out of jail?
+
+##    Solution (a)
+
+Using Gambler ruin Probability method
+
+$P_{z} = \frac{1-(q/p)^{z}}{1 - (q/p)^{m}}$ $where, q \neq  p , 0 \leq Z \leq M$ 
+
+and the quantity $P_{z}$ to be the probability that the gambler’s stake reaches M without ever having reached 0.
+
+```{r}
+z = 1
+M = 8
+p = 0.4
+q = 0.6
+
+p = (1-(q/p)^z) / (1-(q/p)^M)
+p
+```
+**with the Timid Strategy,  the probability that he wins 8 dollars before losing all of his money if he bets 1 dollar each time is 0.0203**
+
+## Solution (b)
+
+If he uses the bold strategy, it means that he would bet all the money each time he wins. So, in this case there are only 4 steps 1, 2 (1st win), 4 (2nd win), 8 (3rd win) to reach $8. 
+
+Because this is bold strategy, we can also solve this problem by Binomial distribution besides the Absorbing Markov chain.
+
+Binomial method:
+
+Number of trials, n = 3
+
+Number of successes, x = 3
+
+$_{x}^{n}\textrm{C}p^{x}(1-p)^{n-x}$
+
+$_{3}^{3}\textrm{C}*0.4^{3}*(1-0.4)^{3-3}$
+
+= 0.064
+
+##    Part (c)
+
+The bold strategy gives Smith approximately 3 times better chance of getting out of jail with the probability 0.064 than the smaller probability 0.0203 given by the timid strategy.
+
+
