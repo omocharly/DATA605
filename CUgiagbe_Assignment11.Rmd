@@ -1,0 +1,102 @@
+---
+title: "DATA605_HW11_Simple Regression Analysis"
+author: "Charles Ugiagbe"
+date: "4/10/2022"
+output:
+  rmdformats::readthedown:
+    gallery: no
+    highlight: tango
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+```
+
+
+## Question
+
+Using the “cars” dataset in R, build a linear model for stopping distance as a function of speed and
+replicate the analysis of your textbook chapter 3 (visualization, quality evaluation of the model, and
+residual analysis.)
+
+###    Solution
+
+```{r}
+glimpse(cars)
+```
+
+Dataset cars includes 50 observations with 2 variables - speed and dist(distance) as shown in the glimpse above
+
+
+##   Visualization
+
+```{r}
+plot(cars$speed,cars$dist, main="Distance vs Speed",
+xlab="Speed", ylab="Dist")
+```
+
+##   The Linear Model Function
+
+The simplest regression model is a straightline. It has the mathematical form:
+
+$ŷ = b_{0} + b_{1}x$
+
+where:
+
+$x$ is the input to the system,
+
+$b_{0}$ is the y-intercept of the line, 
+
+$b_{1}$ is the slope, and 
+
+$ŷ$ is the output value the model predicts. The ^ indicates a predicted or estimated value, not the actual observed value.
+
+
+```{r}
+cars_lm <- lm(cars$dist ~ cars$speed)
+cars_lm
+```
+
+In this case, the y-intercept is b_{0} = -17.579 and the slope is b_{1} = 3.932. Thus, the final regression model is:
+
+$y = -17.579 + 3.932x$
+
+```{r}
+plot(cars$speed, cars$dist, xlab='Speed', ylab='Distance', main='Cars Linear Regression Model')
+abline(cars_lm)
+```
+
+
+```{r}
+summary(cars_lm)
+```
+
+##   Residual Analysis
+
+```{r}
+plot(fitted(cars_lm),resid(cars_lm), main="Residuals")
+abline(0, 0)
+```
+
+```{r}
+qqnorm(resid(cars_lm))
+qqline(resid(cars_lm))
+```
+
+```{r}
+par(mfrow=c(2,2))
+plot(cars_lm)
+```
+
+**From the residual vs fitted value plot we can see the there is no definitepattern in the data hence the data randomness of the residuals and heteroscidatcity is satisfied.**
+
+**From the normal q-q plot we can see that the residuals are Approximately normally distributed.**
+
+**From the overall analysis we can say that the model is a well fitted model since the assumptions of the linear regression model are satisfied here.**
+
