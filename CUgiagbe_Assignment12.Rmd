@@ -1,0 +1,253 @@
+---
+title: "DATA605_HW12_Multiple Regression Analysis"
+author: "Charles Ugiagbe"
+date: "4/17/2022"
+output:
+  rmdformats::readthedown:
+    gallery: no
+    highlight: tango
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+```
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Explore the Dataset
+
+The attached who.csv dataset contains real-world data from 2008. The variables included follow.
+
+- `Country`: name of the country
+- `LifeExp`: average life expectancy for the country in years
+- `InfantSurvival`: proportion of those surviving to one year or more
+- `Under5Survival`: proportion of those surviving to five years or more
+- `TBFree`: proportion of the population without TB
+- `PropMD`: proportion of the population who are MDs
+- `PropRN`: proportion of the population who are RNs
+- `PersExp`: mean personal expenditures on healthcare in US dollars at average exchange rate
+- `GovtExp`: mean government expenditures per capita on healthcare, US dollars at average exchange rate
+- `TotExp`: sum of personal and government expenditures
+
+
+### Data Import
+
+```{r}
+# Import data
+who <- read.csv("https://raw.githubusercontent.com/omocharly/DATA605/main/who.csv")
+head(who)
+```
+
+
+##    Question 1
+
+Provide a scatterplot of LifeExp~TotExp, and run simple linear regression. Do not transform the
+variables. Provide and interpret the F statistics, R^2, standard error,and p-values only. Discuss
+whether the assumptions of simple linear regression met.
+
+##    Solutions 1
+
+
+### Data Exploration
+
+```{r}
+summary(who)
+```
+
+
+```{r}
+who.lm <- lm(LifeExp~TotExp, data=who)
+summary(who.lm)
+```
+
+```{r}
+par(mfrow=c(2,2)) #prints out two rows, two columns of plots
+plot(who.lm)
+```
+
+```{r}
+hist(who.lm$residuals)
+```
+**F statistic: 65.26 on 1 and 188 DF, P-value: 7.714e-14, given the small pvalue, which is much below 0.05 indicates the model has some level of validity.**
+
+**Multiple R2: 0.2577, Adjusted R2: 0.2537 - The model only accounts for roughly 25% of the data’s variation.**
+
+**Residual standard error: In our example, the total expenditure required can deviate from the true regression line by approximately 15.3795867, on average.**
+
+Are the assumptions of simple linear regression met? 
+
+**No, the conditions are not met.**
+
+
+###   Question 2
+
+Raise life expectancy to the 4.6 power (exponential increase) (i.e., LifeExp4.6). Raise total expenditures to the 0.06 power (exponential decrease) (nearly a log transform, TotExp.06). Plot LifeExp4.6 as a function of TotExp.06, and re-run the simple regression model using the transformed variables. Provide and interpret the F statistics, R2, standard error, and p-values. Which model is “better?”
+
+##    Solutions 2
+
+```{r}
+who2 <- who %>% 
+  mutate(LifeExp2 = LifeExp^4.6,
+         TotExp2 = TotExp^.06)
+who.lm2 <- lm(LifeExp2~TotExp2, data=who2)
+summary(who.lm2)
+```
+
+```{r}
+ggplot(who2, aes(x =TotExp2 , y = LifeExp2)) +
+  geom_point()+
+  geom_smooth(method = "lm", formula = y ~ x, se = FALSE, col="red")+
+  ggtitle("Plot of Life Expectancy by Total Expenditure") +
+  xlab("Total Expenditure ^0.06") + ylab("Life Expectancy ^4.6")
+```
+
+```{r}
+par(mfrow=c(2,2)) #prints out two rows, two columns of plots
+plot(who.lm2)
+```
+
+```{r}
+hist(who.lm2$residuals)
+```
+
+**F-statistic: 507.7 on 1 and 188 DF, p-value: < 2.2e-16, given the small pvalue, which is much below 0.05 indicates the model has some level of validity.**
+
+**Multiple R-squared: 0.7298, Adjusted R-squared: 0.7283 - The model only accounts for roughly 73% of the data’s variation.**
+
+**Residual standard error: In our example, the total expenditure required can deviate from the true regression line by approximately 90490000, on average.**
+
+**Are the assumptions of simple linear regression met?**
+
+Yes, conditions are met because the three conditions below are satisfied.
+
+1. Linearity: The relationship between X and the mean of Y is linear. Based on the Residuals vs. Fitted plot, the the red line exhibits an almost linear relationship.
+
+2. Homoscedasticity: The variance of residual is the same for any value of X. The Scale-Location plot shows the residuals are almost spread equally along the ranges of predictor.
+
+3. Independence: Observations are independent of each other. Upon examining the Residuals vs. Fitted plot, we can see the there is no correlation between the points, and the red line is fairly flat.
+
+4. Normality: For any fixed value of X, Y is normally distributed. The nearly normal residual condition is closely met, although the distribution is slightly left skewed.
+
+Which model is “better?”
+
+**Of the models in exercise 1 and 2, the model of exercise 2 is better based solely on the statistics and Linearity criteria.**
+
+
+##    Questions 3
+
+Using the results from 3, forecast life expectancy when TotExp^.06 =1.5. Then forecast life
+expectancy when TotExp^ = 2.5. 
+
+##    Solutions 3
+
+```{r}
+#y = 620060216x - 736527910
+x = 1.5
+y <- (-736527910 + 620060216*x)
+y
+```
+
+```{r}
+(y)^(1/4.6)
+```
+**Life expectancy when TotExp.06 = 1.5 is approximately 63.3**
+
+
+
+```{r}
+x = 2.5
+y <- (-736527910 + 620060216*x)
+y
+```
+```{r}
+(y)^(1/4.6)
+```
+**Life expectancy when TotExp.06=2.5 is approximately 86.5**
+
+
+##    Question 4
+
+Build the following multiple regression model and interpret the F Statistics, R^2, standard error,
+and p-values. How good is the model?
+
+LifeExp = b0 + b1 x PropMd + b2 x TotExp + b3 x PropMD x TotExp
+
+
+##    Solution 4
+
+```{r}
+who.lm3 <- lm(LifeExp~TotExp + PropMD + PropMD * TotExp, data=who)
+summary(who.lm3)
+```
+
+
+```{r}
+par(mfrow=c(2,2)) 
+plot(who.lm3)
+```
+
+
+```{r}
+par(mfrow=c(1,1))
+# residuals histogram
+hist(who.lm3$residuals, 
+     xlab = "Residuals", ylab = "", 
+     main = "Histogram of Residuals Distribution")
+```
+
+F-statistic: 34.49 on 3 and 186 DF, p-value: <2.2e−16, given the small pvalue, which is much below 0.05 indicates the model has some level of validity. 
+
+Multiple R-squared: 0.3574, Adjusted R-squared: 0.3471 - The model only accounts for roughly 36% of the data’s variation. 
+
+#### Are the assumptions of simple linear regression met?  
+
+1. Linearity: The relationship between X and the mean of Y is not linear. Based on the Residuals vs. Fitted plot, the the red line exhibits a quadratic relationship and is not linear.
+
+2. Homoscedasticity: The variance of residual is not the same for any value of X. The Scale-Location plot shows the residuals are not spread equally along the ranges of predictor. 
+
+3. Independence: Observations are not independent of each other. Upon examining the Residuals vs. Fitted plot, we can see a correlation between the variables. 
+
+4. Multivariate Normality: The nearly normal residual condition doesn’t seem to be met based on the histogram of residuals shown below show the residuals are heavily left skew. 
+
+How good is the model? Are the assumptions of simple linear regression met?
+
+**The model is not that great given the criteria mentioned above because the conditions are not met**
+
+
+
+##    Question 5
+
+Forecast LifeExp when PropMD=.03 and TotExp = 14. Does this forecast seem realistic? Why or why not?
+
+##    Solution 5
+
+```{r}
+b0 <- 6.277 * 10^1
+b1 <- 1.497 * 10^3
+b2 <- 7.233 * 10^-5
+b3 <- -6.026 * 10^-3
+#PropMD
+x1 <- .03 
+#TotExp
+x2 <- 14 
+```
+
+
+```{r}
+y = b0 + (b1 * x1) + (b2 * x2) + (b3 * x1 * x2)
+y
+```
+```{r}
+max(who$LifeExp)
+```
+
+```{r}
+mean(who$LifeExp)
+```
+
+**The forecasted life expectancy using the linear model from exercise 4 is 107.7. This forecast is unrealistic with the actual data because the maximum life expectancy from the WHO data is 83 and the mean of all life expectancies is 67.4.**
