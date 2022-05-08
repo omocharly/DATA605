@@ -1,0 +1,165 @@
+---
+title: "DATA605_HW14_Taylor Series"
+author: "Charles Ugiagbe"
+date: "5/8/2022"
+output:
+  rmdformats::readthedown:
+    gallery: no
+    highlight: tango
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+### Question 1: Compute the Taylor series expansion of $f(x) = 1/(1-x)$
+
+##    Solution 1
+
+Taylor Series is defined as $f(x) = \sum\limits_{n=0}^{\infty}\frac{f^{(n)}(c)}{n!}(x-c)^n$.
+
+    $f(x) = 1/(1-x)$
+
+Find first several derivatives.
+
+$f^0(c) = \frac{1}{(1-c)}$,
+
+$f'(c) = \frac{1}{(1-c)^2}$
+
+$f''(c) = \frac{2}{(1-c)^3}$
+
+$f'''(c) = \frac{6}{(1-c)^4}$
+
+$f''''(c) = \frac{24}{(1-c)^5}$
+
+Per definition, 
+
+$$
+\begin{split}
+f(x) &= \frac{1}{(1-c)0!}(x-c)^0 + \frac{1}{(1-c)^2 1!}(x-c)^1 + \frac{2}{(1-c)^3 2!}(x-c)^2 + \frac{6}{(1-c)^4 3!}(x-c)^3 + \frac{24}{(1-c)^5 4!}(x-c)^4 + ... \\
+&= \frac{1}{(1-c)} + \frac{1}{(1-c)^2}(x-c) + \frac{2!}{(1-c)^3 2!}(x-c)^2 + \frac{3!}{(1-c)^4 3!}(x-c)^3 + \frac{4!}{(1-c)^5 4!}(x-c)^4 + ... \\
+&= \frac{1}{(1-c)} + \frac{1}{(1-c)^2}(x-c) + \frac{1}{(1-c)^3}(x-c)^2 + \frac{1}{(1-c)^4}(x-c)^3 + \frac{1}{(1-c)^5}(x-c)^4 + ... \\
+&= \sum\limits_{n=0}^{\infty} \frac{1}{(1-c)^{n+1}}(x-c)^n
+\end{split}
+$$
+
+The Maclaurin Series of $f(x)$, $c=0$, $f(x) = \sum\limits_{n=0}^{\infty} x^n = 1 + x + x^2 + x^3 + x^4 + ...$.
+
+It is easy to see that this series will only converge if $|x|<1$, so the valid range is $(-1, 1)$.
+
+###   Function 2: Generate the taylor series expansion of $f(x) = e^x$
+
+##    Solution 2
+
+Find first several derivatives.
+
+$f^0(c) = e^c$
+
+$f'(c) = e^c$
+
+$f''(c) = e^c$
+
+$f'''(c) = e^c$
+
+$f''''(c) = e^c$
+
+Per definition, 
+
+$$
+\begin{split}
+f(x) &= \frac{e^c}{0!}(x-c)^0 + \frac{e^c}{1!}(x-c)^1 + \frac{e^c}{2!}(x-c)^2 + \frac{e^c}{3!}(x-c)^3 + ...\\
+&= e^c + e^c(x-c) + e^c\frac{(x-c)^2}{2!} + e^c\frac{(x-c)^3}{3!} + ...\\
+&= e^c \sum\limits_{n=0}^{\infty} \frac{(x-c)^n}{n!}
+\end{split}
+$$
+
+The Maclaurin Series of $f(x)$, $c=0$, $f(x) = \sum\limits_{n=0}^{\infty} \frac{x^n}{n!} = 1 + x + \frac{x^2}{2} + \frac{x^3}{6} + \frac{x^4}{24} + ...$.
+
+**Ratio Test**: 
+
+$\frac{a_{n+1}}{a_n} = \frac{x^{n+1}}{(n+1)!}\times\frac{n!}{x^n} = \frac{x \times x^n \times n!}{(n+1)\times n! \times x^n} = \frac{x}{n+1}$
+
+$L = \lim\limits_{n\to\infty}\frac{x}{n+1} = 0$ and $L<1$.
+
+This series will converge for any $x$, so the valid range is $(-\infty, \infty)$.
+
+
+###   Question 3: Taylor series Expansion of $f(x) = ln(1+x)$
+
+##    Solution 3
+
+Find first several derivatives.
+
+$f^0(c) = ln(1+c)$
+
+$f'(c) = \frac{1}{c+1}$
+
+$f''(c) = -\frac{1}{(c+1)^2}$
+
+$f'''(c) = \frac{2}{(c+1)^3}$
+
+$f''''(c) = -\frac{6}{(c+1)^4}$
+
+Per definition, 
+
+$$
+\begin{split}
+f(x) &= \frac{ln(1+c)}{0!}(x-c)^0 + \frac{1}{(c+1)1!}(x-c)^1 - \frac{1}{(c+1)^2 2!}(x-c)^2 + \frac{2}{(c+1)^3 3!}(x-c)^3 - \frac{6}{(c+1)^4 4!}(x-c)^4 + ...\\
+&= ln(1+c) + \frac{1}{(c+1)}(x-c) - \frac{1!}{(c+1)^2 2\times1!}(x-c)^2 + \frac{2!}{(c+1)^3 3\times2!}(x-c)^3 - \frac{3!}{(c+1)^4 4\times3!}(x-c)^4 + ...\\
+&= ln(1+c) + \frac{1}{(c+1)}(x-c) - \frac{1}{2(c+1)^2}(x-c)^2 + \frac{1}{3(c+1)^3}(x-c)^3 - \frac{1}{4(c+1)^4}(x-c)^4 + ...\\
+&= ln(1+c) + \sum\limits_{n=1}^{\infty} (-1)^{n+1}\frac{(x-c)^n}{n(c+1)^n}
+\end{split}
+$$
+
+The Maclaurin Series of $f(x)$, $c=0$, $f(x) = \sum\limits_{n=1}^{\infty} (-1)^{n+1}\frac{x^n}{n} = x - \frac{x^2}{2} + \frac{x^3}{3} - \frac{x^4}{4} + ...$.
+
+**Ratio Test**: 
+
+$\frac{a_{n+1}}{a_n} = \frac{(-1)^{n+1+1} x^{n+1}}{n+1}\times\frac{n}{(-1)^{n+1}x^n} = \frac{(-1)^{n+1}\times(-1)\times x \times x^n \times n}{(n+1)(-1)^{n+1}x^n} = \frac{-xn}{n+1}$
+
+$L = \lim\limits_{n\to\infty}|\frac{-xn}{n+1}| = |x|$
+
+This series will only converge if $L<1$ or $|x|<1$, so then the valid range is $(-1, 1)$.
+
+
+###   Question 4: Taylor series Expansion of $f(x) = x^(1/2)$
+
+##    Solution 4
+
+Find first several derivatives.
+
+
+
+$f(c) = c^{1/2} = \sqrt{x}$
+
+$f'(c) = \frac{1}{2}c^{-1/2}$
+
+$f''(c) = -\frac{1}{4}c^{-3/2}$
+
+$f'''(c) = \frac{3}{8}c^{-5/2}$
+
+$f''''(c) = -\frac{15}{16}c^{-7/2}$
+
+Put the derivative into the taylor series equation
+
+$x^{1/2} = \sum\limits_{n=0}^{\infty} f^n(c)\frac{(x-c)^n}{n!}$
+ 
+$\sum\limits_{n=0}^{\infty} f^n(c)\frac{(x-c)^n}{n!} =$
+
+
+$$
+\begin{split}
+f(c) &= \frac{c^{1/2}}{0!}(x-c)^0 + \frac{c^{-1/2}}{2*1!}(x-c)^1 - \frac{c^{-3/2}}{4 * 2!}(x-c)^2 + \frac{3c^{-5/2}}{8 * 3!}(x-c)^3 + \frac{15c^{-7/2}}{16 * 4!}(x-c)^4 + ... \\
+&= c^{1/2}  + \frac{c^{-1/2}}{2}(x-c) - \frac{c^{-3/2}}{8}(x-c)^2 + \frac{c^{-5/2}}{16}(x-c)^3 + \frac{c^{-7/2}}{128}(x-c)^4 + ... \\
+
+&= \sum\limits_{n=0}^{\infty} \frac{c^{1/2 - n}}{2^{n}}(x-c)^n\\
+f(c) &= \sum\limits_{n=0}^{\infty} \binom{1/2}{n}(x-c)^n\\
+\end{split}
+$$
+
+
+**Taylor series of $\sqrt{x}$ can be written as:**  $$f(c) = \sum\limits_{n=0}^{\infty} \binom{1/2}{n}(x-c)^n$$
+
