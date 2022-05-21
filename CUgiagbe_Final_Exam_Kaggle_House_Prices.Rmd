@@ -1,0 +1,286 @@
+---
+title: "Kaggle House Prices Regression Technique"
+output:
+  rmdformats::readthedown: default
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Final Exam Part 3 (Kaggle House Prices)
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(grid)
+library(matrixcalc)
+library(caret)
+library(nnet)
+library(OpenImageR)
+```
+
+## load and read data
+```{r}
+house_data <- read.csv("https://raw.githubusercontent.com/omocharly/DATA605/main/train.csv")
+head(house_data)
+```
+
+```{r}
+str(house_data)
+```
+
+## Reduce the data to Numeric variables Only
+
+Since we have alot of categorical variable in our data, We trim down the variables in the data only to numeric variables relevant to our analysis.
+
+```{r}
+numeric_data <- house_data %>% select_if(is.numeric)
+str(numeric_data)
+```
+
+i decide to further filter down the data to take away the variable with too much zero
+
+```{r}
+final_data <- numeric_data[,c(1, 4, 7,8, 10, 12:15, 17, 28:30, 38)]
+str(final_data)
+```
+
+
+
+## Univariate Descriptive Statistics and plots
+```{r}
+summary(final_data)
+```
+
+```{r}
+par(mfrow=c(2, 3))
+plot(house_data$YearBuilt,house_data$SalePrice)
+plot(house_data$BsmtUnfSF,house_data$SalePrice)
+plot(house_data$X1stFlrSF,house_data$SalePrice)
+plot(house_data$GrLivArea,house_data$SalePrice)
+plot(house_data$GarageArea,house_data$SalePrice)
+
+```
+
+
+##    Correlation Matrix
+Derive a correlation matrix for any THREE quantitative variables in the dataset. Test the hypotheses that the correlations between each pairwise set of variables is 0 and provide a 80% confidence interval. Discuss the meaning of your analysis. Would you be worried about familywise error? Why or why not?
+
+**I choose BsmtUnfSF, X1stFlrSF and SalePrice**
+
+```{r}
+corr_data <- house_data[, c("BsmtUnfSF", "X1stFlrSF", "SalePrice")]
+corr_matrix <- round(cor(corr_data),2)
+corr_matrix
+```
+
+```{r}
+cor.test(corr_data$BsmtUnfSF, corr_data$X1stFlrSF, conf.level = 0.8)
+```
+
+```{r}
+cor.test(corr_data$BsmtUnfSF, corr_data$SalePrice, conf.level = 0.8)
+```
+
+
+```{r}
+cor.test(corr_data$X1stFlrSF, corr_data$SalePrice, conf.level = 0.8)
+```
+
+
+**In all 3 tests we have a very small p value, therefore, we can reject the the null hypothesis. The true correlation is not 0 for any of the three pairs of variables.**
+
+The formula to estimate the familywise error rate is:
+
+$FWE≤1–(1–alphaIT)^c$
+
+Where:
+
+αIT = alpha level for an individual test (e.g. .05), c = Number of comparisons.
+
+Source: https://www.statisticshowto.datasciencecentral.com/familywise-error-rate/
+
+In our case…
+
+```{r}
+FWE <- 1-((1-0.05)^3)
+FWE
+```
+
+So the probability of a family-wise error is just over 14%.
+
+**This is definitelty a significant risk.**
+
+
+##    Linear Algebra and Correlation
+Invert your 3 x 3 correlation matrix from above. (This is known as the precision matrix and contains variance inflation factors on the diagonal.) Multiply the correlation matrix by the precision matrix, and then multiply the precision matrix by the correlation matrix. Conduct LU decomposition on the matrix.
+
+```{r}
+precision_matrix <- solve(corr_matrix)
+precision_matrix
+```
+
+```{r}
+round(corr_matrix %*% precision_matrix, 2)
+```
+
+```{r}
+round(precision_matrix %*% corr_matrix, 2)
+```
+
+```{r}
+ lu.decomposition(corr_matrix)
+```
+
+##    Calculus-Based Probability & Statistics
+Many times, it makes sense to fit a closed form distribution to data. Select a variable in the Kaggle.com training dataset that is skewed to the right, shift it so that the minimum value is absolutely above zero if necessary. Then load the MASS package and run fitdistr to fit an exponential probability density function. (See https://stat.ethz.ch/R-manual/R-devel/library/MASS/html/fitdistr.html). Find the optimal value of λ for this distribution, and then take 1000 samples from this exponential distribution using this value (e.g., rexp(1000, λ)).
+
+
+**From the above analysis, we can see that the X1stFlrSF variable is right-skewed. The minimum value of the Lot Area is absolutely above zero so need not to shift.**
+
+
+```{r}
+#lot Area Minimum Value
+min(house_data$X1stFlrSF)
+```
+
+```{r}
+hist(house_data$X1stFlrSF, breaks = 20, main = "Histogram of X 1st Floor SF")
+```
+
+
+```{r message=FALSE, warning=FALSE}
+library(MASS)
+d <- fitdistr(house_data$X1stFlrSF, densfun = 'exponential')
+lambda <- d$estimate
+epdf <- rexp(1000, lambda)
+```
+
+#### Optimal Value of λ:
+
+The optimal value of lambda = 1/λ.
+
+```{r}
+optimal_value <- 1/lambda
+optimal_value
+```
+
+
+
+#### Plot a histogram and compare it with a histogram of your original variable.
+
+```{r}
+par(mfrow=c(1,2))
+hist(house_data$X1stFlrSF, breaks = 20, col="violet", main = "Original - Lot Area")
+hist(epdf, breaks = 20, col="royalblue", main = "Exponential - Lot Area")
+```
+
+Using the exponential pdf, find the 5th and 95th percentiles using the cumulative distribution function (CDF). Also generate a 95% confidence interval from the empirical data, assuming normality. Finally, provide the empirical 5th percentile and 95th percentile of the data. Discuss.
+
+
+```{r}
+round(quantile(epdf, c(.05, .95)), 3)
+```
+
+
+```{r}
+conf_int <- t.test(house_data$X1stFlrSF)
+conf_int
+```
+
+
+```{r}
+round(quantile(house_data$X1stFlrSF, c(.05, .95)), 3)
+```
+
+The simulated data is not a good fit for the observed data in this case. The simulated exponential distribution is much more skewed than our original data. While the 95the percentile isn’t that far off, the 5th percentile is very different in our observed data vs. our simulation.
+
+
+```{r}
+str(final_data)
+```
+
+
+##    Modelling
+
+```{r}
+# Standardize predictors
+means <- sapply(final_data[,2:13],mean)
+stdev <- sapply(final_data[,2:13],sd)
+df.scaled <- as.data.frame(scale(final_data[,2:13], center=means, scale=stdev))
+df.scaled$SalePrice <- final_data$SalePrice
+df.scaled$Id <- final_data$Id
+head(df.scaled)
+```
+
+
+```{r}
+attach(df.scaled)
+model_1 <- lm(SalePrice ~ LotArea + YearBuilt + YearRemodAdd + BsmtFinSF1 + BsmtUnfSF + TotalBsmtSF + X1stFlrSF + X2ndFlrSF + GrLivArea + GarageArea + WoodDeckSF + OpenPorchSF)
+summary(model_1)
+```
+
+
+## Remove Variables with High P-values from model
+
+**We try to improve on the model by removing variable with high P-value**
+
+```{r}
+# Remove BsmtUnfSF and OpenPorchSF
+model_2 <- lm(SalePrice ~ LotArea + YearBuilt + YearRemodAdd + BsmtFinSF1 + TotalBsmtSF + X1stFlrSF + X2ndFlrSF + GrLivArea + GarageArea + WoodDeckSF)
+summary(model_2)
+```
+
+We take out the next highest p-value 
+
+```{r}
+# Remove GrLivArea
+model_3 <- lm(SalePrice ~ LotArea + YearBuilt + YearRemodAdd + BsmtFinSF1 + TotalBsmtSF + X1stFlrSF + X2ndFlrSF + GarageArea + WoodDeckSF)
+summary(model_3)
+```
+
+Our 4th model has all very low p-values and a moderately OK R2 vale at 0.735. Let’s see how it does on the test data.
+
+```{r}
+par(mfrow=c(2,2))
+plot(model_3)
+```
+
+## Work with Test Data
+
+
+```{r}
+#Load the data and remove columns same as our training data
+test_df <- read.csv("https://raw.githubusercontent.com/omocharly/DATA605/main/test.csv")
+test_df <- test_df %>% select_if(is.numeric)
+test_df <- test_df[,c(1, 4, 7,8, 10:17, 28:34)]
+test_df <- test_df[,-c(6,11,16:19)]
+str(test_df)
+```
+
+```{r}
+# Standardize test predictors
+test.scaled <- as.data.frame(scale(test_df[,2:13], center=means, scale=stdev))
+test.scaled$SalePrice <- test_df$SalePrice
+test.scaled$Id <- test_df$Id
+head(test.scaled)
+```
+
+
+```{r}
+sp_predictions <- predict(model_3,newdata=test.scaled)
+sp_predictions <- data.frame(as.vector(sp_predictions))
+sp_predictions$Id <- test.scaled$Id
+sp_predictions[,c(1,2)] <- sp_predictions[,c(2,1)]
+colnames(sp_predictions) <- c("Id", "SalePrice")
+sp_predictions[is.na(sp_predictions)] <- 0
+head(sp_predictions)
+```
+
+```{r}
+write.csv(sp_predictions,'predictions.csv', row.names=FALSE)
+```
+
+
