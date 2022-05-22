@@ -1,0 +1,627 @@
+---
+title: "DATA605_Final Exam"
+author: "Charles Ugiagbe"
+date: "5/22/2022"
+output:
+  rmdformats::readthedown:
+    gallery: no
+    highlight: tango
+editor_options: 
+  chunk_output_type: inline
+---
+
+
+```{r setup, include=FALSE}
+library(knitr)
+```
+
+#   Final Exam Part 1: (PageRank)
+
+#####   Question: Form the A matrix. Then, introduce decay and form the B matrix
+
+##  Step 1: Mat A,Decay and Mat B
+
+As shown in the notes, the transition matrix $A$ is given by
+
+
+$$A = \left[ \begin{array}{c}
+0 & \frac{1}{2} & \frac{1}{2} & 0 & 0 & 0 \\
+\frac{1}{6} & \frac{1}{6} & \frac{1}{6} & \frac{1}{6} & \frac{1}{6} & \frac{1}{6} \\
+\frac{1}{3} & \frac{1}{3} & 0 & 0 & \frac{1}{3} & 0 \\
+0 & 0 & 0 & 0 & \frac{1}{2} & \frac{1}{2} \\
+0 & 0 & 0 & \frac{1}{2} & 0 & \frac{1}{2} \\
+0 & 0 & 0 & 1 & 0 & 0
+\end{array} \right]$$
+
+The matrix $B$ is obtained by
+$$B = 0.85 \times A + \frac{0.15}{n} \approx \left[ \begin{array}{c}
+0.025 & 0.45 & 0.45 & 0.025 & 0.025 & 0.025 \\
+0.1667 & 0.1667 & 0.1667 & 0.1667 & 0.1667 & 0.1667 \\
+0.3083 & 0.3083 & 0.025 & 0.025 & 0.3083 & 0.025 \\
+0.025 & 0.025 & 0.025 & 0.025 & 0.45 & 0.45 \\
+0.025 & 0.025 & 0.025 & 0.45 & 0.025 & 0.45 \\
+0.025 & 0.025 & 0.025 & 0.875 & 0.025 & 0.025
+\end{array} \right]$$
+
+In R, these are stored as below:
+```{r A&B}
+A <- matrix(
+  c(0, 1/2, 1/2, 0, 0, 0,
+  0, 0, 0, 0, 0, 0,
+  1/3, 1/3, 0, 0, 1/3, 0,
+  0, 0, 0, 0, 1/2, 1/2,
+  0, 0, 0, 1/2, 0, 1/2,
+  0, 0, 0, 1, 0, 0),
+  nrow = 6, byrow = TRUE)
+A[2, ] <- rep(1/6, 6)
+B <- 0.85 * A + 0.15 / nrow(A)
+```
+
+##### Question: Start with a uniform rank vector r and perform power iterations on B till convergence.That is, compute the solution r = Bn × r. Attempt this for a sufficiently large n so that r actually converges.
+
+##   Step 2:Power Iterations
+
+The following function is created to perform power iterations on $B$ until convergence, utilizing a uniform rank vector 
+
+$r^T = \left[ \begin{array}{c}\frac{1}{6} & \frac{1}{6} & \frac{1}{6} & \frac{1}{6} & \frac{1}{6} & \frac{1}{6} \end{array} \right]$
+
+
+```{r power-iteration}
+power_iterate <- function(mat, vec) {
+  converged <- FALSE
+  n <- 0
+  while(!converged) {
+    vec <- crossprod(mat, vec)
+    n <- n + 1
+    if(identical(crossprod(mat, vec), vec)) {
+      converged <- TRUE
+    }
+  }
+  print(paste('Converged in', n, 'iterations'))
+  return(vec)
+}
+
+r <- matrix(rep(1/nrow(B), nrow(B)), ncol=1)
+it_results <- power_iterate(B, r)
+
+```
+
+The page rank vector and associated page rankings, as calculated, are:
+`r kable(data.frame(page = seq(1, 6), vector = round(it_results, 4), rank = rank(1 - it_results)), padding=0, align = 'c')`
+
+#####  Question: Compute the eigen-decomposition of B and verify that you indeed get an eigenvalueof 1 as the largest eigenvalue and that its corresponding eigenvector is the same vector that you obtained in the previous power iteration method. Further, this eigenvector has all positive entries and it sums to 1.
+
+
+##   Step 3:Eigen-Decomposition
+
+For this exercise, we are interested in the largest eigenvalue of $B$, as well as the associated *left* eigenvector of $B$.  Taking only the real components, this can be shown to be
+```{r eigen}
+Re(eigen(B)$values[1])
+ev_results <- matrix(Re(eigen(t(B))$vectors[,1]))
+```
+
+The eigenvectors returned by the `eigen` function return normal vectors (i.e. vectors with length 1); the returned vector is divided by its sum to give a vector with a sum 1.  This vector is identical to the vector returned using the `power_iterate` function:
+
+```{r un-norm}
+ev_results <- ev_results / sum(ev_results)
+identical(round(ev_results, 7), round(it_results, 7))
+```
+
+`r kable(data.frame(page = seq(1, 6), vector = round(ev_results, 4), rank = rank(1 - ev_results)), padding=0, align = 'c')`
+
+
+##### Question:   Use the graph package in R and its page.rank method to compute the Page Rank of the graph as given in A.
+
+
+## Step 4: igraph Netwk
+
+Using the `igraph` package, the network can be visualized in a directed graph, and the page rank of the nodes in the network returned.
+
+```{r message=FALSE, warning=FALSE}
+library(igraph)
+```
+
+```{r graph, echo=FALSE}
+G <- graph(c(1, 2, 1, 3, 3, 1, 3, 2, 3, 5, 4, 5, 4, 6, 5, 4, 5, 6, 6, 4))
+plot(G)
+g_results <- matrix(page_rank(G)$vector)
+```
+
+
+The `igraph` package handles decay using a damping factor of 0.85 and automatically assigns a uniform random probability to dangling nodes, which matches the two approaches outlined above.  The page rank vector returned matches that returned through power iteration:
+
+```{r comp-results}
+identical(round(it_results, 13), round(g_results, 13))
+```
+
+#####   Question: Verify that you do get the same PageRank vector as the three approaches above.
+
+##   Step 5: Comparison of Results
+
+As shown in the above sections, the page rank vector for the given universe of six pages was derived through three methods:
+
+  * Power iteration of the matrix $B$
+  * Eigenvector corresponding to $\lambda = 1$ for the matrix $B$
+  * `igraph` implementation using the matrix $A$
+  
+The three methods return the same results (to 13 decimal points of accuracy) once the eigenvector is scaled from being a unit vector.
+
+```{r}
+all_results <- data.frame(
+  "Power Iteration" = round(ev_results, 7), 
+  Eigenvector = round(ev_results, 7), 
+  Graph = round(g_results, 7), 
+  Rank = rank(1 - ev_results),
+  row.names = seq(1, 6), 
+  check.names = FALSE)
+kable(all_results, padding = 0, align = 'c', row.names = TRUE)
+```
+
+
+#    Final Exam Part 2 (kaggle MNIST)
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(grid)
+library(matrixcalc)
+library(caret)
+library(nnet)
+library(OpenImageR)
+```
+
+##   Load and Read train Data
+
+```{r}
+train_data <- read_csv("train.csv")
+```
+
+## Step 3: Data Format Images
+
+##### Using the training.csv file, plot representations of the first 10 images to understand the data format. Go ahead and divide all pixels by 255 to produce values between 0 and 1. (This is equivalent to min-max scaling.) (5 points)
+
+```{r}
+digit<-function(x){
+  m<-matrix(unlist(x), nrow=28, byrow=T)
+  m<-t(apply(m, 2, rev))
+  image(m, col=grey.colors(255))
+}
+
+par(mfrow=c(3,4))
+
+for(i in 1:10){
+  digit(train_data[i, -1])
+}
+
+```
+
+##   Step 4:Frequency Distribution
+
+##### 4. What is the frequency distribution of the numbers in the dataset? (5 points)
+
+```{r}
+train_label <- train_data$label
+train_data_freq <- as.data.frame(table(train_label))
+```
+
+
+```{r}
+ggplot(train_data_freq, aes(x = train_label,y=Freq)) + 
+  geom_histogram(stat='identity') + 
+  labs(title = 'Frequency Distribution of Drawn Digits - Training Set',
+       x = 'Drawn Digit')
+```
+
+
+##   Step 5:Pixel Intensity.
+
+##### 5. For each number, provide the mean pixel intensity. What does this tell you? (5 points)
+
+```{r}
+labels = train_data[,1]
+data <- train_data[,-1]/255
+```
+
+
+```{r}
+get_number_intensity <- function(target, labels, data){
+  x = data[labels==target,]
+  means = rowMeans(x)
+  return(mean(means))
+}
+```
+
+
+```{r}
+for (i in 1:9) {
+  mean_intensity <- get_number_intensity(i , labels, data)
+  
+  ret_string = str_interp("Pixel intensity for number ${i} is ${mean_intensity}")
+  
+  print(ret_string)
+}
+```
+
+##  Step 6: Generate Component with PCA
+
+##### 6. Reduce the data by using principal components that account for 95% of the variance. How many components did you generate? Use PCA to generate all possible components (100% of the variance). How many components are possible? Why? (5 points)
+
+
+```{r}
+train_pca <- prcomp(data)
+```
+
+
+```{r}
+train_pca_std <- train_pca$sdev
+train_pca_cum_var <- cumsum(train_pca_std^2)/sum(train_pca_std^2)
+plot(train_pca_cum_var)
+```
+
+```{r}
+which.max(train_pca_cum_var >= .95)
+```
+
+```{r}
+which.max(train_pca_cum_var >= 1)
+```
+
+## Step 7: Plot 1st 10 images by PCA
+
+##### Plot the first 10 images generated by PCA. They will appear to be noise. Why? (5 points)
+
+```{r}
+train_pca_rot <- train_pca$rotation
+```
+
+
+```{r}
+for (d in 1:10){
+  plot(4,4, xlim=c(1,28), ylim=c(1,28))
+  imageShow(array(train_pca_rot[,d],c(28,28)))
+}
+```
+
+##  Step 8: Re-run PCA using 8's
+
+
+#####  Now, select only those images that have labels that are 8’s. Re-run PCA that accounts for all of the variance (100%). Plot the first 10 images. What do you see? (5 points)
+
+```{r}
+x = data[labels==8,]
+pca_8 <- prcomp(x)
+```
+
+
+```{r}
+pca_8_std <- pca_8$sdev
+pca_8_cum_var <- cumsum(pca_8_std^2)/sum(pca_8_std^2)
+plot(pca_8_cum_var)
+```
+
+
+```{r}
+pca_8_rot <- pca_8$rotation
+```
+
+
+```{r}
+for (d in 1:10){
+  plot(4,4, xlim=c(1,28), ylim=c(1,28))
+  imageShow(array(pca_8_rot[,d],c(28,28)))
+}
+```
+
+The variance hit 95% slower than I would have thought. But our images are clearly horizontal eights - that look vaguely like anthrax or a worn hippy tattoo.
+
+
+## Step 9: Test the Model
+
+##### An incorrect approach to predicting the images would be to build a linear regression model with y as the digit values and X as the pixel matrix. Instead, we can build a multinomial model that classifies the digits. Build a multinomial model on the entirety of the training set. Then provide its classification accuracy (percent correctly identified) as well as a matrix of observed versus forecast values (confusion matrix). This matrix will be a 10 x 10, and correct classifications will be on the diagonal. (10 points)
+
+
+
+```{r}
+test_size <- floor(.2 * nrow(train_data))
+set.seed(5593)
+test_index <- sample(seq_len(nrow(data)), size = test_size)
+
+train_df <- data[-test_index,]
+train_labels <- c(labels[-test_index,])[[1]]
+
+test_df <- data[test_index,]
+test_labels <- c(labels[test_index,])[[1]]
+```
+
+
+```{r}
+mn_model <- multinom(train_labels~., train_df, MaxNWts = 100000)
+```
+
+```{r}
+predictions <- predict(mn_model, test_df)
+test_labels <- as.factor(test_labels)
+```
+
+
+```{r}
+confusionMatrix(predictions,test_labels)
+```
+
+
+# Final Exam Part 3 (Kaggle House Prices)
+
+
+## load and read data
+```{r}
+house_data <- read.csv("https://raw.githubusercontent.com/omocharly/DATA605/main/train.csv")
+head(house_data)
+```
+
+```{r}
+str(house_data)
+```
+
+## Reduce the data to Numeric variables Only
+
+Since we have alot of categorical variable in our data, We trim down the variables in the data only to numeric variables relevant to our analysis.
+
+```{r}
+numeric_data <- house_data %>% select_if(is.numeric)
+str(numeric_data)
+```
+
+i decide to further filter down the data to take away the variable with too much zero
+
+```{r}
+final_data <- numeric_data[,c(1, 4, 7,8, 10, 12:15, 17, 28:30, 38)]
+str(final_data)
+```
+
+
+## Univariate Descriptive Statistics and plots
+```{r}
+summary(final_data)
+```
+
+```{r}
+par(mfrow=c(2, 3))
+plot(house_data$YearBuilt,house_data$SalePrice)
+plot(house_data$BsmtUnfSF,house_data$SalePrice)
+plot(house_data$X1stFlrSF,house_data$SalePrice)
+plot(house_data$GrLivArea,house_data$SalePrice)
+plot(house_data$GarageArea,house_data$SalePrice)
+```
+
+
+##    Correlation Matrix
+Derive a correlation matrix for any THREE quantitative variables in the dataset. Test the hypotheses that the correlations between each pairwise set of variables is 0 and provide a 80% confidence interval. Discuss the meaning of your analysis. Would you be worried about familywise error? Why or why not?
+
+**I choose BsmtUnfSF, X1stFlrSF and SalePrice**
+
+```{r}
+corr_data <- house_data[, c("BsmtUnfSF", "X1stFlrSF", "SalePrice")]
+corr_matrix <- round(cor(corr_data),2)
+corr_matrix
+```
+
+```{r}
+cor.test(corr_data$BsmtUnfSF, corr_data$X1stFlrSF, conf.level = 0.8)
+```
+
+```{r}
+cor.test(corr_data$BsmtUnfSF, corr_data$SalePrice, conf.level = 0.8)
+```
+
+
+```{r}
+cor.test(corr_data$X1stFlrSF, corr_data$SalePrice, conf.level = 0.8)
+```
+
+
+**In all 3 tests we have a very small p value, therefore, we can reject the the null hypothesis. The true correlation is not 0 for any of the three pairs of variables.**
+
+The formula to estimate the familywise error rate is:
+
+$FWE≤1–(1–alphaIT)^c$
+
+Where:
+
+αIT = alpha level for an individual test (e.g. .05), c = Number of comparisons.
+
+Source: https://www.statisticshowto.datasciencecentral.com/familywise-error-rate/
+
+In our case…
+
+```{r}
+FWE <- 1-((1-0.05)^3)
+FWE
+```
+
+So the probability of a family-wise error is just over 14%.
+
+**This is definitelty a significant risk.**
+
+
+##    Linear Algebra and Correlation
+Invert your 3 x 3 correlation matrix from above. (This is known as the precision matrix and contains variance inflation factors on the diagonal.) Multiply the correlation matrix by the precision matrix, and then multiply the precision matrix by the correlation matrix. Conduct LU decomposition on the matrix.
+
+```{r}
+precision_matrix <- solve(corr_matrix)
+precision_matrix
+```
+
+```{r}
+round(corr_matrix %*% precision_matrix, 2)
+```
+
+```{r}
+round(precision_matrix %*% corr_matrix, 2)
+```
+
+```{r}
+ lu.decomposition(corr_matrix)
+```
+
+##    Calculus-Based Probability & Statistics
+Many times, it makes sense to fit a closed form distribution to data. Select a variable in the Kaggle.com training dataset that is skewed to the right, shift it so that the minimum value is absolutely above zero if necessary. Then load the MASS package and run fitdistr to fit an exponential probability density function. (See https://stat.ethz.ch/R-manual/R-devel/library/MASS/html/fitdistr.html). Find the optimal value of λ for this distribution, and then take 1000 samples from this exponential distribution using this value (e.g., rexp(1000, λ)).
+
+
+**From the above analysis, we can see that the X1stFlrSF variable is right-skewed. The minimum value of the Lot Area is absolutely above zero so need not to shift.**
+
+
+```{r}
+#lot Area Minimum Value
+min(house_data$X1stFlrSF)
+```
+
+```{r}
+hist(house_data$X1stFlrSF, breaks = 20, main = "Histogram of X 1st Floor SF")
+```
+
+
+```{r message=FALSE, warning=FALSE}
+library(MASS)
+d <- fitdistr(house_data$X1stFlrSF, densfun = 'exponential')
+lambda <- d$estimate
+epdf <- rexp(1000, lambda)
+```
+
+#### Optimal Value of λ:
+
+The optimal value of lambda = 1/λ.
+
+```{r}
+optimal_value <- 1/lambda
+optimal_value
+```
+
+
+
+#### Plot a histogram and compare it with a histogram of your original variable.
+
+```{r}
+par(mfrow=c(1,2))
+hist(house_data$X1stFlrSF, breaks = 20, col="violet", main = "Original - Lot Area")
+hist(epdf, breaks = 20, col="royalblue", main = "Exponential - Lot Area")
+```
+
+Using the exponential pdf, find the 5th and 95th percentiles using the cumulative distribution function (CDF). Also generate a 95% confidence interval from the empirical data, assuming normality. Finally, provide the empirical 5th percentile and 95th percentile of the data. Discuss.
+
+
+```{r}
+round(quantile(epdf, c(.05, .95)), 3)
+```
+
+
+```{r}
+conf_int <- t.test(house_data$X1stFlrSF)
+conf_int
+```
+
+
+```{r}
+round(quantile(house_data$X1stFlrSF, c(.05, .95)), 3)
+```
+
+The simulated data is not a good fit for the observed data in this case. The simulated exponential distribution is much more skewed than our original data. While the 95the percentile isn’t that far off, the 5th percentile is very different in our observed data vs. our simulation.
+
+
+```{r}
+str(final_data)
+```
+
+
+##    Modelling
+
+```{r}
+# Standardize predictors
+means <- sapply(final_data[,2:13],mean)
+stdev <- sapply(final_data[,2:13],sd)
+df.scaled <- as.data.frame(scale(final_data[,2:13], center=means, scale=stdev))
+df.scaled$SalePrice <- final_data$SalePrice
+df.scaled$Id <- final_data$Id
+head(df.scaled)
+```
+
+
+```{r}
+attach(df.scaled)
+model_1 <- lm(SalePrice ~ LotArea + YearBuilt + YearRemodAdd + BsmtFinSF1 + BsmtUnfSF + TotalBsmtSF + X1stFlrSF + X2ndFlrSF + GrLivArea + GarageArea + WoodDeckSF + OpenPorchSF)
+summary(model_1)
+```
+
+
+## Remove Variables with High P-values from model
+
+**We try to improve on the model by removing variable with high P-value**
+
+```{r}
+# Remove BsmtUnfSF and OpenPorchSF
+model_2 <- lm(SalePrice ~ LotArea + YearBuilt + YearRemodAdd + BsmtFinSF1 + TotalBsmtSF + X1stFlrSF + X2ndFlrSF + GrLivArea + GarageArea + WoodDeckSF)
+summary(model_2)
+```
+
+We take out the next highest p-value 
+
+```{r}
+# Remove GrLivArea
+model_3 <- lm(SalePrice ~ LotArea + YearBuilt + YearRemodAdd + BsmtFinSF1 + TotalBsmtSF + X1stFlrSF + X2ndFlrSF + GarageArea + WoodDeckSF)
+summary(model_3)
+```
+
+Our 4th model has all very low p-values and a moderately OK R2 vale at 0.735. Let’s see how it does on the test data.
+
+```{r}
+par(mfrow=c(2,2))
+plot(model_3)
+```
+
+## Work with Test Data
+
+
+```{r}
+#Load the data and remove columns same as our training data
+test_df <- read.csv("https://raw.githubusercontent.com/omocharly/DATA605/main/test.csv")
+test_df <- test_df %>% select_if(is.numeric)
+test_df <- test_df[,c(1, 4, 7,8, 10:17, 28:34)]
+test_df <- test_df[,-c(6,11,16:19)]
+str(test_df)
+```
+
+```{r}
+# Standardize test predictors
+test.scaled <- as.data.frame(scale(test_df[,2:13], center=means, scale=stdev))
+test.scaled$SalePrice <- test_df$SalePrice
+test.scaled$Id <- test_df$Id
+head(test.scaled)
+```
+
+
+```{r}
+sp_predictions <- predict(model_3,newdata=test.scaled)
+sp_predictions <- data.frame(as.vector(sp_predictions))
+sp_predictions$Id <- test.scaled$Id
+sp_predictions[,c(1,2)] <- sp_predictions[,c(2,1)]
+colnames(sp_predictions) <- c("Id", "SalePrice")
+sp_predictions[is.na(sp_predictions)] <- 0
+head(sp_predictions)
+```
+
+```{r}
+write.csv(sp_predictions,'price_predictions.csv', row.names=FALSE)
+```
+
+## Kaggle Result
+
+**My kaggle username is Charles Ugiagbe and my kaggle submission score is 0.47612**
+
+<center>
+<img src = "https://github.com/omocharly/DATA605/blob/main/kaggle%20submission.png?raw=true" />
+</center>
+
+ 
+<center>
+<img src = "https://github.com/omocharly/DATA605/blob/main/leadersboard%20position.png?raw=true" />
+</center>
+
+
